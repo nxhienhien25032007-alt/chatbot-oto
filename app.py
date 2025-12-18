@@ -1,124 +1,85 @@
+# Copyright Luu Anh Hoang THPT NGUYEN CONG HOAN
+
 import streamlit as st
 
-# --- CẤU HÌNH TRANG WEB ---
-st.set_page_config(page_title="Trợ lý An toàn AutoShop", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="AutoSafe Bot", layout="centered")
 
-# --- MENU BÊN TRÁI ---
-with st.sidebar:
-    st.header("🔍 Hướng dẫn tra cứu")
-    st.markdown("Nhập từ khóa như:")
-    st.code("xe nâng")
-    st.code("bảo hộ")
-    st.code("sạc bình")
-    st.divider()
-    st.info("💡 Mẹo: Nhập câu hỏi ngắn gọn để bot trả lời chính xác nhất.")
+# --- DATABASE ---
+DATA = {
+    "xe_nang": """
+### QUY TRÌNH VẬN HÀNH XE NÂNG
+1. Kiểm tra phanh, lốp và hệ thống thủy lực trước khi chạy.
+2. Không nâng hàng quá tải trọng quy định.
+3. Khi di chuyển phải hạ thấp càng nâng để giữ trọng tâm.
+4. Tắt máy, hạ càng sát đất và rút chìa khóa khi đỗ xe.
+    """,
+    "bao_ho": """
+### TRANG BỊ BẢO HỘ (PPE)
+1. Mũ bảo hộ: Bảo vệ đầu khỏi vật rơi từ trên cao.
+2. Giày bảo hộ: Loại có mũi sắt chống dập ngón và đế chống trượt.
+3. Kính bảo hộ: Sử dụng khi cắt, mài hoặc tiếp xúc hóa chất.
+4. Găng tay: Sử dụng loại phù hợp (chống cắt hoặc chống hóa chất).
+    """,
+    "sac_binh": """
+### AN TOÀN SẠC BÌNH ẮC QUY
+1. Sạc tại nơi thông thoáng, xa nguồn lửa hoặc tia lửa điện.
+2. Mở nắp hộc bình để thoát khí Hydro trong quá trình sạc.
+3. Chỉ châm thêm nước cất, không châm quá vạch quy định.
+4. Tuyệt đối không chạm vào điện khi tay đang ướt.
+    """
+}
 
-# --- GIAO DIỆN CHÍNH ---
-st.title("🛡️ TRỢ LÝ AN TOÀN XƯỞNG DỊCH VỤ")
-st.write("---") 
+# --- LOGIC XỬ LÝ ---
+def get_answer(text):
+    text = text.lower()
+    if any(k in text for k in ["xe nâng", "xe nang", "lái xe"]):
+        return DATA["xe_nang"]
+    elif any(k in text for k in ["bảo hộ", "bao ho", "mũ", "giày", "găng"]):
+        return DATA["bao_ho"]
+    elif any(k in text for k in ["sạc", "sac", "ắc quy", "ac quy", "bình"]):
+        return DATA["sac_binh"]
+    return "Vui lòng nhập từ khóa chính xác như: xe nâng, bảo hộ, sạc bình."
 
-# --- KHỞI TẠO LỊCH SỬ CHAT ---
+# Khởi tạo các biến lưu trữ
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "Chào bạn! Tôi có thể giúp gì về quy trình an toàn hôm nay?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "AutoSafe Bot xin chào! Bạn cần hỗ trợ gì?"}]
 
-# --- HIỂN THỊ LỊCH SỬ ---
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+if "input_value" not in st.session_state:
+    st.session_state.input_value = ""
 
-# --- HÀM XỬ LÝ TRẢ LỜI ---
-def get_detailed_response(user_input):
-    text = user_input.lower()
-    
-    # 1. XE NÂNG
-    if any(word in text for word in ["xe nâng", "nâng hàng", "lái xe", "vận hành"]):
-        return """
-### 🚜 QUY TRÌNH VẬN HÀNH XE NÂNG AN TOÀN
+# --- Theme Hiển Thị CỰC VÍP ---
+st.title("AUTOSAFE BOT")
 
-**1. Trước khi vận hành:**
-* ✅ Kiểm tra: Phanh, lốp, càng nâng, hệ thống thủy lực.
-* ✅ Kiểm tra nhiên liệu: Mức dầu hoặc mức dung dịch ắc quy.
+# Hiển thị đoạn để sủaa
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+def suggest_text(keyword):
+    st.session_state.input_value = keyword
+st.write("---")
+cols = st.columns([1, 1, 1, 3])
+with cols[0]:
+    if st.button("xe nâng"): suggest_text("xe nâng")
+with cols[1]:
+    if st.button("bảo hộ"): suggest_text("bảo hộ")
+with cols[2]:
+    if st.button("sạc bình"): suggest_text("sạc bình")
 
-**2. Khi nâng/hạ hàng:**
-* ⚠️ **Tải trọng:** Đảm bảo < tải trọng cho phép.
-* ⚠️ **Di chuyển:** Hạ càng thấp nhất có thể, giữ trọng tâm thấp.
-* ⛔ **Tuyệt đối:** KHÔNG phanh gấp, KHÔNG cua gấp.
-* 🚶 **An toàn:** Giữ khoảng cách an toàn với người đi bộ.
-
-**3. Sau khi sử dụng:**
-* Đỗ xe đúng nơi quy định ➡️ Tắt máy ➡️ Hạ càng xuống sát đất ➡️ Vệ sinh xe.
-        """
-
-    # 2. BẢO HỘ LAO ĐỘNG (PPE)
-    elif any(word in text for word in ["ppe", "bảo hộ", "mũ", "giày", "găng", "kính", "mặc"]):
-        return """
-### 🛡️ TRANG BỊ BẢO HỘ CÁ NHÂN (PPE) BẮT BUỘC
-
-Để đảm bảo an toàn, bạn cần trang bị đủ:
-
-* **👷 Mũ bảo hộ:** Bảo vệ đầu khỏi vật rơi.
-* **🥾 Giày bảo hộ:** Đế chống trượt & mũi sắt (chống dập ngón).
-* **👓 Kính bảo hộ:** Chống bụi & hóa chất văng vào mắt.
-* **🧤 Găng tay:**
-    * *Găng chống hóa chất:* Khi làm việc với ắc quy/dầu nhớt.
-    * *Găng chống cắt:* Khi làm việc cơ khí.
-* **💺 Đai an toàn (Xe nâng):** Bắt buộc thắt để tránh văng khỏi xe khi sự cố.
-        """
-
-    # 3. ĐIỆN & ẮC QUY
-    elif any(word in text for word in ["điện", "sạc", "ắc quy", "bình", "axit", "nước cất"]):
-        return """
-### ⚡ AN TOÀN ĐIỆN & BẢO DƯỠNG ẮC QUY
-
-**🔋 Quy trình Sạc ắc quy:**
-* 📍 **Vị trí:** Nơi thoáng khí, xa nguồn lửa.
-* 🌡️ **Nhiệt độ:** Không sạc khi bình nóng > 50°C.
-* 💨 **Lưu ý:** Phải mở nắp hộc bình để thoát khí (tránh nổ).
-
-**🛠️ Bảo dưỡng:**
-* 💧 **Châm nước:** Chỉ dùng **NƯỚC CẤT**, không châm quá vạch phao trắng.
-* 🧪 **Kiểm tra:** Tỷ trọng dung dịch (Axit H₂SO₄ loãng).
-* 🧼 **Vệ sinh:** Lau sạch bình sau khi sạc.
-
-**🔌 An toàn chung:**
-* 🚫 Không chạm vào điện khi tay ướt.
-* ⚠️ Giữ khoảng cách với dây điện cao thế.
-        """
-
-    # 4. NỘI QUY XƯỞNG
-    elif any(word in text for word in ["nội quy", "quy định", "vệ sinh", "cấm", "5s"]):
-        return """
-### 📋 TÓM TẮT NỘI QUY XƯỞNG
-
-* **1. Tuân thủ:** Luôn mặc đủ PPE và làm đúng quy trình.
-* **2. Vệ sinh (5S):** Sàng lọc - Sắp xếp - Sạch sẽ - Săn sóc - Sẵn sàng.
-* **3. Báo cáo:** Báo ngay quản lý nếu thấy máy hỏng/nguy hiểm.
-* **4. Cấm:** ⛔ KHÔNG mang đồ ăn, vật dụng cá nhân vào nơi sửa chữa.
-        """
-    
-    # 5. CHÀO HỎI / KHÔNG HIỂU
-    elif "chào" in text or "hi" in text:
-        return "👋 Xin chào! Bạn cần tra cứu về: **Xe nâng**, **Đồ bảo hộ**, **Ắc quy** hay **Nội quy**?"
-    
-    else:
-        return """
-        Xin lỗi, tôi chưa hiểu rõ. Bạn hãy thử gõ các từ khóa chính như:
-        * *Xe nâng*
-        * *Sạc bình*
-        * *Đồ bảo hộ*
-        """
-
-# --- XỬ LÝ DỮ LIỆU ---
-if prompt := st.chat_input("Nhập câu hỏi..."):
-    # Hiện câu hỏi người dùng
+# note text vào đây
+prompt = st.chat_input("Nhập tin nhắn...", key="chat_widget")
+if st.session_state.input_value and not prompt:
+    prompt = st.session_state.input_value
+    st.session_state.input_value = "" # Xóa đi để lần sau không bị lặp
+    #send the input
+if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Hiện câu trả lời của Bot (Hiện ngay lập tức, không chạy chữ)
+    res = get_answer(prompt)
+    st.session_state.messages.append({"role": "assistant", "content": res})
     with st.chat_message("assistant"):
-        full_response = get_detailed_response(prompt)
-        st.markdown(full_response)
-        
-    # Lưu vào lịch sử
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        st.markdown(res)
+    st.rerun()
+
+    # hêt con mẹ nó bài rồi ông cháu ơi
